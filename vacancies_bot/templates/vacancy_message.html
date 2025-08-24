@@ -1,0 +1,12 @@
+<b>New vacancy for you:</b>
+📌 <b>{{ name }}</b>
+🏢 <b>Company:</b> {{ employer }}
+
+📍 <b>Location:</b> {{ workplaces | join(" ") }}
+📄 Contract: {{ contract_types | join(", ") }}
+💼 Experience: {{ position_levels | join(", ") }}
+🔍 Category: {{ category }} -> {{ subcategory }}
+🗂 Work Model: {{ work_models | join(", ") }}
+🗓 Schedule: {{ work_schedules | join(", ") }}
+
+<a href='{{ url }}'><b>VIEW</b></a>
