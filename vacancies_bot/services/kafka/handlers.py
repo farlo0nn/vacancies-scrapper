@@ -2,7 +2,7 @@ import traceback
 
 
 from services.kafka.client import kafka_client
-from services.notifications import notifications_service
+from services.notifications.notifications_service import notifications_service
 from logger import logger 
 
 

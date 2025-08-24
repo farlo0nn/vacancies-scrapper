@@ -17,7 +17,6 @@ class NotificationsService:
     async def send_vacancy_message(self, vacancy_data: dict) -> None:
         vacancy_message = self._format_vacancy_message(vacancy_data)
         subscribers = vacancy_data["subscribers"]
-        logger.info(f"{len(vacancy_message)}: {vacancy_message}")
         for user_id in subscribers:
             try:
                 await self.bot.send_message(

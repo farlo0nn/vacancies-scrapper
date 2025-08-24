@@ -5,13 +5,20 @@ from keyboards.menus import criteria_keyboard
 from states import FilterState
 from services.kafka.client import kafka_client
 from logger import logger 
+from config import CRITERIA
 
 router = Router()
 
-CRITERIA = {"Category": "category", "Location":"location", "Work Schedule": "work_schedule", "Work Model": "work_model", "Experience": "experience", "Contract Type": "contract_type"}
-
 @router.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
+    """
+    Handles "start" command:
+    - Creates new user with its id and username.
+    - Sends user data to Kafka.
+    - Replies with welcoming message
+    - Sets FSM state to FilterState.choosing_criterion.
+    """
+    
     user_data = {
         "id": message.from_user.id,
         "username": message.from_user.username,

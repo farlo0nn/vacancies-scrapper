@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from infrastructure.celery.celery_app import app
 
@@ -34,6 +34,6 @@ def handle_upsert_user_data(data: dict):
     user_service.upsert_user_data(data)
 
 
-@app.task
+@app.task(name="infrastructure.celery.tasks.handle_get_user_data")
 def handle_get_user_data(data: dict):
     user_service.get_user_data(data)

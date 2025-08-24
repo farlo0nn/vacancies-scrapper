@@ -1,24 +1,24 @@
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from keyboards.menus import values_keyboard, criteria_keyboard, main_keyboard
-from states import FilterState, AppState
+from states import FilterState, SettingsState
 from services.kafka.client import kafka_client
 from logger import logger 
+from config import CRITERIA, PAGE_SIZE
 
 router = Router()
 
-PAGE_SIZE = 3
-CRITERIA = {
-    "Category": "category", 
-    "Location":"location", 
-    "Work Schedule": "work_schedule", 
-    "Work Model": "work_model", 
-    "Experience": "experience", 
-    "Contract Type": "contract_type"
-}
-
 @router.callback_query(F.data.startswith("crit:"))
 async def choose_criterion(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Handles criterion selection:
+    - Extracts the selected criterion from callback data.
+    - Stores the current criterion in FSM state.
+    - Fetches all available values for the criterion from cache or Kafka service.
+    - Fetches the user’s currently selected values from cache or Kafka service.
+    - Generates a paginated keyboard and updates the message.
+    """
+
     logger.info("choose_criterion called")
     criterion = callback.data.split(":")[1]
     await state.update_data(current_criterion=criterion)
@@ -57,6 +57,13 @@ async def choose_criterion(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("val:"))
 async def choose_value(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Handles value selection for a given criterion:
+    - Updates the FSM preferences state based on user selection/deselection.
+    - Calculates the current page for pagination.
+    - Updates the keyboard to reflect the current page and selected values.
+    """
+
     logger.info("choose_value called")
     _, criterion, value = callback.data.split(":")
     data = await state.get_data()
@@ -85,6 +92,13 @@ async def choose_value(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("page:"))
 async def paginate(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Handles pagination for criterion values:
+    - Determines the requested page and retrieves cached values.
+    - Fetches values from Kafka if cache is empty.
+    - Generates a keyboard for the requested page and updates the message.
+    """
+
     logger.info("paginate called")
     _, criterion, page = callback.data.split(":")
     page = int(page)
@@ -111,6 +125,14 @@ async def paginate(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("submit_val:"))
 async def save_criterion_preferences(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Handles individual criterion submission:
+    - Confirms saving of current criterion data to the user.
+    - Returns to criterion selection menu for additional preferences.
+    - Sets FSM state back to choosing_criterion.
+    """
+
+
     logger.info("save_criterion_preferences called")
 
     await callback.message.answer("✅ Criterion data saved!")
@@ -119,6 +141,14 @@ async def save_criterion_preferences(callback: types.CallbackQuery, state: FSMCo
 
 @router.callback_query(F.data.startswith("submit_preferences"))
 async def submit_preferences(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Handles final submission of all user preferences:
+    - Collects preferences from FSM state.
+    - Sends updated user data to Kafka.
+    - Confirms to user that preferences have been saved.
+    - Sets FSM state to SettingsState.consuming_vacancies.
+    """
+    
     logger.info("submit_preferences called")
     data = await state.get_data()
 
@@ -128,6 +158,6 @@ async def submit_preferences(callback: types.CallbackQuery, state: FSMContext):
         "preferences": data.get("preferences", {})
     }
 
-    await state.set_state(AppState.consuming_vacancies)
+    await state.set_state(SettingsState.consuming_vacancies)
     await kafka_client.send_user_data(user_data)
     await callback.message.answer("✅ Your preferences have been saved!", reply_markup=main_keyboard())

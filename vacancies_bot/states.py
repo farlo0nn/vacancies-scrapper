@@ -4,6 +4,6 @@ class FilterState(StatesGroup):
     choosing_criterion = State()
     choosing_value = State()
 
-class AppState(StatesGroup):
+class SettingsState(StatesGroup):
     consuming_vacancies = State()
     configuration = State()
