@@ -2,23 +2,30 @@ import traceback
 
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from models.vacancy_models import (
-    Category, Subcategory
-)
+from models.vacancy_models import Category, Subcategory
 from models.telegram_models import (
-    User, Location, ContractType, PositionLevel, WorkSchedule, WorkModel,
-    user_location_association, user_contract_type_association,
-    user_position_level_association, user_work_schedule_association,
-    user_work_model_association, user_category_association,
-    user_subcategory_association
+    User,
+    Location,
+    ContractType,
+    PositionLevel,
+    WorkSchedule,
+    WorkModel,
+    user_location_association,
+    user_contract_type_association,
+    user_position_level_association,
+    user_work_schedule_association,
+    user_work_model_association,
+    user_category_association,
+    user_subcategory_association,
 )
 from models.config import SessionLocal
-from logger import logger 
+from logger import logger
+
 
 class UserRepository:
 
     def upsert_user_from_dict(self, data: dict):
-        with SessionLocal() as session: 
+        with SessionLocal() as session:
             user_id = data["id"]
             username = data.get("username")
             preferences = data.get("preferences", {})
@@ -28,7 +35,7 @@ class UserRepository:
                 user = User(id=user_id, username=username)
                 session.add(user)
             else:
-                user.username = username 
+                user.username = username
 
             def sync_association(assoc_table, model_cls, preference_key):
                 if preference_key not in preferences:
@@ -38,9 +45,12 @@ class UserRepository:
                     return
 
                 current = {
-                    row[0] for row in
-                    session.execute(
-                        assoc_table.select().with_only_columns(assoc_table.c[f"{model_cls.__tablename__}_id"])
+                    row[0]
+                    for row in session.execute(
+                        assoc_table.select()
+                        .with_only_columns(
+                            assoc_table.c[f"{model_cls.__tablename__}_id"]
+                        )
                         .where(assoc_table.c.user_id == user.id)
                     )
                 }
@@ -53,7 +63,7 @@ class UserRepository:
                     if not obj:
                         obj = model_cls(name=value)
                         session.add(obj)
-                        session.flush()  
+                        session.flush()
                     objs.append(obj)
 
                 selected_ids = {o.id for o in objs}
@@ -62,8 +72,12 @@ class UserRepository:
                 if to_delete:
                     session.execute(
                         assoc_table.delete().where(
-                            (assoc_table.c.user_id == user.id) &
-                            (assoc_table.c[f"{model_cls.__tablename__}_id"].in_(to_delete))
+                            (assoc_table.c.user_id == user.id)
+                            & (
+                                assoc_table.c[f"{model_cls.__tablename__}_id"].in_(
+                                    to_delete
+                                )
+                            )
                         )
                     )
 
@@ -71,15 +85,24 @@ class UserRepository:
                 if to_add:
                     session.execute(
                         assoc_table.insert(),
-                        [{"user_id": user.id, f"{model_cls.__tablename__}_id": i} for i in to_add]
+                        [
+                            {"user_id": user.id, f"{model_cls.__tablename__}_id": i}
+                            for i in to_add
+                        ],
                     )
 
             sync_association(user_location_association, Location, "location")
             sync_association(user_category_association, Category, "category")
             sync_association(user_subcategory_association, Subcategory, "subcategory")
-            sync_association(user_contract_type_association, ContractType, "contract_type")
-            sync_association(user_position_level_association, PositionLevel, "experience")
-            sync_association(user_work_schedule_association, WorkSchedule, "work_schedule")
+            sync_association(
+                user_contract_type_association, ContractType, "contract_type"
+            )
+            sync_association(
+                user_position_level_association, PositionLevel, "experience"
+            )
+            sync_association(
+                user_work_schedule_association, WorkSchedule, "work_schedule"
+            )
             sync_association(user_work_model_association, WorkModel, "work_model")
 
             try:
@@ -88,9 +111,8 @@ class UserRepository:
                 session.rollback()
                 raise
 
-
     def get_user_data(self, data: dict) -> dict:
-        with SessionLocal() as session: 
+        with SessionLocal() as session:
             user_id = data["user_id"]
 
             user = session.get(User, user_id)
@@ -98,6 +120,7 @@ class UserRepository:
                 return {}
 
             preferences = {}
+
             def collect_association(assoc_table, model_cls, preference_key):
                 rows = session.execute(
                     assoc_table.select()
@@ -123,9 +146,8 @@ class UserRepository:
 
             return preferences
 
-            
-    def is_user_consuming(self, user_id: int, change_value: bool = False): 
-        with SessionLocal() as session: 
+    def is_user_consuming(self, user_id: int, change_value: bool = False):
+        with SessionLocal() as session:
             try:
                 user = session.query(User).filter(User.id == user_id).first()
                 if not user:
@@ -138,5 +160,7 @@ class UserRepository:
                 return user.is_consuming
             except SQLAlchemyError as e:
                 session.rollback()
-                logger.exception(f"DB error while processing consuming flag for user {user_id}")
+                logger.exception(
+                    f"DB error while processing consuming flag for user {user_id}"
+                )
                 raise

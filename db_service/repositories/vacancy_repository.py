@@ -3,31 +3,37 @@ import traceback
 
 from models import SessionLocal
 from models.vacancy_models import Vacancy, Employer, Category, Subcategory
-from logger import logger 
+from logger import logger
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import text 
-from typing import List 
+from sqlalchemy import text
+from typing import List
+
 
 class VacancyRepository:
 
-    def __init__(self) -> None:        
+    def __init__(self) -> None:
         self.employer_cache = {}
         self.category_cache = {}
         self.subcategory_cache = {}
 
-
     def exists(self, vacancy_id: int) -> bool:
-        with SessionLocal() as session: 
-            return session.query(Vacancy).filter_by(id=vacancy_id).first() is not None 
-        
-    def create(self, vacancy_json: int) -> int: 
-        with SessionLocal() as session: 
+        with SessionLocal() as session:
+            return session.query(Vacancy).filter_by(id=vacancy_id).first() is not None
+
+    def create(self, vacancy_json: int) -> int:
+        with SessionLocal() as session:
             try:
 
-                employer_id = self._get_or_create_employer(session, vacancy_json["employer"])
-                category_id = self._get_or_create_category(session, vacancy_json["category"])
-                subcategory_id = self._get_or_create_subcategory(session, vacancy_json["subcategory"], category_id)
-            
+                employer_id = self._get_or_create_employer(
+                    session, vacancy_json["employer"]
+                )
+                category_id = self._get_or_create_category(
+                    session, vacancy_json["category"]
+                )
+                subcategory_id = self._get_or_create_subcategory(
+                    session, vacancy_json["subcategory"], category_id
+                )
+
                 vacancy = Vacancy(
                     id=vacancy_json["id"],
                     url=vacancy_json["url"],
@@ -40,32 +46,32 @@ class VacancyRepository:
                     work_schedules=vacancy_json.get("work_schedules"),
                     position_levels=vacancy_json.get("position_levels"),
                     work_models=vacancy_json.get("work_models"),
-                    optional_cv=vacancy_json.get("optional_cv", False)
+                    optional_cv=vacancy_json.get("optional_cv", False),
                 )
-            
+
                 session.add(vacancy)
                 session.commit()
-                logger.info(f"Vacancy {vacancy_json["id"]} saved to database successfully")
+                logger.info(
+                    f"Vacancy {vacancy_json["id"]} saved to database successfully"
+                )
             except Exception as e:
                 logger.info(f"Failed to save vacancy: {vacancy_json["id"]} to db")
                 session.rollback()
-        
 
-    
     def _get_or_create_employer(self, session, employer_name):
         if employer_name in self.employer_cache:
             return self.employer_cache[employer_name]
-        
+
         try:
             employer = session.query(Employer).filter_by(name=employer_name).first()
             if employer:
                 self.employer_cache[employer_name] = employer.id
                 return employer.id
-            
+
             try:
                 employer = Employer(name=employer_name)
                 session.add(employer)
-                session.flush() 
+                session.flush()
                 self.employer_cache[employer_name] = employer.id
                 return employer.id
             except IntegrityError:
@@ -75,8 +81,10 @@ class VacancyRepository:
                     self.employer_cache[employer_name] = employer.id
                     return employer.id
                 else:
-                    raise Exception(f"Could not create or find employer: {employer_name}")
-                    
+                    raise Exception(
+                        f"Could not create or find employer: {employer_name}"
+                    )
+
         except Exception as e:
             logger.error(f"Error handling employer {employer_name}: {str(e)}")
             raise
@@ -84,13 +92,13 @@ class VacancyRepository:
     def _get_or_create_category(self, session, category_name):
         if category_name in self.category_cache:
             return self.category_cache[category_name]
-        
+
         try:
             category = session.query(Category).filter_by(name=category_name).first()
             if category:
                 self.category_cache[category_name] = category.id
                 return category.id
-            
+
             try:
                 category = Category(name=category_name)
                 session.add(category)
@@ -104,8 +112,10 @@ class VacancyRepository:
                     self.category_cache[category_name] = category.id
                     return category.id
                 else:
-                    raise Exception(f"Could not create or find category: {category_name}")
-                    
+                    raise Exception(
+                        f"Could not create or find category: {category_name}"
+                    )
+
         except Exception as e:
             logger.error(f"Error handling category {category_name}: {str(e)}")
             raise
@@ -113,38 +123,46 @@ class VacancyRepository:
     def _get_or_create_subcategory(self, session, subcategory_name, category_id):
         if subcategory_name in self.subcategory_cache:
             return self.subcategory_cache[subcategory_name]
-        
+
         try:
-            subcategory = session.query(Subcategory).filter_by(name=subcategory_name).first()
+            subcategory = (
+                session.query(Subcategory).filter_by(name=subcategory_name).first()
+            )
             if subcategory:
                 self.subcategory_cache[subcategory_name] = subcategory.id
                 return subcategory.id
-            
+
             try:
-                subcategory = Subcategory(name=subcategory_name, category_id=category_id)
+                subcategory = Subcategory(
+                    name=subcategory_name, category_id=category_id
+                )
                 session.add(subcategory)
                 session.flush()
                 self.subcategory_cache[subcategory_name] = subcategory.id
                 return subcategory.id
             except IntegrityError:
                 session.rollback()
-                subcategory = session.query(Subcategory).filter_by(name=subcategory_name).first()
+                subcategory = (
+                    session.query(Subcategory).filter_by(name=subcategory_name).first()
+                )
                 if subcategory:
                     self.subcategory_cache[subcategory_name] = subcategory.id
                     return subcategory.id
                 else:
-                    raise Exception(f"Could not create or find subcategory: {subcategory_name}")
-                    
+                    raise Exception(
+                        f"Could not create or find subcategory: {subcategory_name}"
+                    )
+
         except Exception as e:
             logger.error(f"Error handling subcategory {subcategory_name}: {str(e)}")
             raise
 
-        
-    def determine_target_users(self, vacancy_id) -> List[int]: 
-        with SessionLocal() as session: 
-            try: 
-                response = session.execute(text(
-                f"""
+    def determine_target_users(self, vacancy_id) -> List[int]:
+        with SessionLocal() as session:
+            try:
+                response = session.execute(
+                    text(
+                        f"""
                 with v_data as (
                     select v.id as id, c.id as category_id, c.name as category, s.name as subcategory, v.contract_types, v.position_levels, v.workplaces, v.work_models, v.work_schedules
                     from vacancies v
@@ -189,10 +207,14 @@ class VacancyRepository:
                     or exists(select 1 from users_work_model_association uwma
                                         join work_model wm on uwma.work_model_id = wm.id
                                         where uwma.user_id = u.id and vd.work_models @> to_jsonb(wm.name)));
-                """))
+                """
+                    )
+                )
 
                 target_users = [row[0] for row in response.fetchall()]
                 logger.info(target_users)
                 return target_users
             except Exception as e:
-                logger.error(f"Failed to get target users for vacancy: {vacancy_id}. Traceback: {traceback.format_exc()}")
+                logger.error(
+                    f"Failed to get target users for vacancy: {vacancy_id}. Traceback: {traceback.format_exc()}"
+                )

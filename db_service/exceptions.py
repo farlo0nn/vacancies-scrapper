@@ -1,3 +1,2 @@
-
 class InvalidCategory(Exception):
-    pass 
+    pass
