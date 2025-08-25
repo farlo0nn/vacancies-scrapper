@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from .config import Base
+from .config import Base, engine
 
 
 class Employer(Base):
@@ -45,3 +45,5 @@ class Vacancy(Base):
     work_models = Column(JSONB)
 
     optional_cv = Column(Boolean, default=False, nullable=True)
+
+Base.metadata.create_all(engine)

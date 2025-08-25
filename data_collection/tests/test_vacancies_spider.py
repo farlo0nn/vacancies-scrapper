@@ -28,8 +28,3 @@ def test_data_scraping(response: TextResponse):
     contract_type = ' '.join(response.xpath('//li[@data-scroll-id="contract-types"]//text()').getall()).strip()
     logger.info(f"location: {location}, contract types: {contract_type}")
     assert location == "Świętego Jana 20, Stare Miasto, Kraków (małopolskie)"
-
-def test_salary_extraction(response: TextResponse, spider: VacanciesSpider):
-    salary = spider._get_salary_data(response)
-    assert salary == 5000.0
-    

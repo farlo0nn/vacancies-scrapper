@@ -4,7 +4,6 @@ import sys
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-
 def run_spider_job():
     subprocess.run([sys.executable, "spider_runner.py"])
 

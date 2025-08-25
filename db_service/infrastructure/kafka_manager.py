@@ -25,7 +25,7 @@ class AsyncKafkaManager:
 
     async def _send_async(self, topic: str, message: dict):
         producer = AIOKafkaProducer(
-            bootstrap_servers="localhost:9092",
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
             value_serializer=lambda x: json.dumps(x).encode("utf-8"),
         )
         await producer.start()

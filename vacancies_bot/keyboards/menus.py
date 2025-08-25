@@ -50,7 +50,18 @@ def values_keyboard(all_values: list[str], selected: list[str], page: int, total
     buttons.append([InlineKeyboardButton(text="Submit", callback_data=f"submit_val:{criterion}")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-def configuration_keyboard(is_consuming: bool = True):
+def main_keyboard():
+
+    
+    keyboard = [
+        [KeyboardButton(text="Settings")]
+    ]
+    return ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard = True 
+    )
+
+def configuration_keyboard(is_listening: bool = True):
     """
     Builds a reply keyboard for the settings menu in the Telegram bot.
     The keyboard provides two options:
@@ -60,7 +71,7 @@ def configuration_keyboard(is_consuming: bool = True):
         - If `is_consuming` is False: shows "✅ Enable notifications".
     """
 
-    notifications_message = "❌ Disable notifications" if is_consuming else "✅ Enable notifications"
+    notifications_message = "❌ Disable notifications" if is_listening else "✅ Enable notifications"
     keyboard = [
         [KeyboardButton(text="Preferences")],
         [KeyboardButton(text=notifications_message)]

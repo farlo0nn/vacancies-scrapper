@@ -16,5 +16,9 @@ VACANCIES_SPIDER_ALLOWED_DOMAINS = os.environ.get("VACANCIES_SPIDER_ALLOWED_DOMA
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_VACANCIES_SEND_TOPIC = os.environ.get("KAFKA_VACANCIES_SEND_TOPIC", "vacancy")
 
+# Cache
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+
 # Logging
 LOG_FILE = os.environ.get("LOG_FILE", "logs/log.log")

@@ -16,11 +16,6 @@ class CriterionService:
             request_id = data["request_id"]
             criterion = data["criterion"]
 
-            cache_key = f"criterion:{criterion}"
-            cached = redis_cache.get(cache_key)
-            if cached:
-                values = json.loads(cached)
-
             values = redis_cache.get_criterion_values(criterion)
 
             if values is None:

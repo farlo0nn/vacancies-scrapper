@@ -7,6 +7,7 @@ from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 from aiokafka.structs import ConsumerRecord
 from logger import logger 
 from typing import List, Dict, Callable
+from config import KAFKA_BOOTSTRAP_SERVERS
 
 class KafkaClient:
 
@@ -21,7 +22,7 @@ class KafkaClient:
 
     async def start_producer(self) -> None: 
         self.producer = AIOKafkaProducer(
-            bootstrap_servers="localhost:9092",
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
             value_serializer=lambda x: json.dumps(x).encode("utf-8")
         )
         self.producer_running = True 
@@ -32,7 +33,7 @@ class KafkaClient:
             self.producer_running = False 
             await self.producer.stop()
 
-    async def start_consumer(self, topics: List[str], group_id: str = "telegram-group") -> None: 
+    async def start_consumer(self, topics: List[str]) -> None: 
         if self.consumer_running:
             logger.info("Consumer is already running")
             return 
@@ -40,8 +41,7 @@ class KafkaClient:
         try:
             self.consumer = AIOKafkaConsumer(
                 *topics,
-                bootstrap_servers="localhost:9092",
-                group_id=group_id,
+                bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
                 value_deserializer=lambda x: json.loads(x.decode("utf-8"))
             )
 
@@ -76,7 +76,6 @@ class KafkaClient:
 
                 try:
                     await self._handle_message(message)
-                    await self.consumer.commit()
                 except Exception as e:
                     logger.error(f"Couldn't process message: {message.topic}\nError: {traceback.format_exc()}"
                 )
