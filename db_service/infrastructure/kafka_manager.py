@@ -12,6 +12,14 @@ class AsyncKafkaManager:
         self._executor = ThreadPoolExecutor(max_workers=2)
 
     def send_message(self, topic: str, message: dict):
+        """
+        Sends a message to a Kafka topic synchronously:
+        - Runs an async producer inside a separate event loop to avoid blocking the main loop.
+        - Submits the async task to a thread pool executor.
+        - Waits for the result with a timeout of 20 seconds.
+        - Returns once the message is successfully sent or raises TimeoutError if exceeded.
+        """
+
         def run_async():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -24,6 +32,14 @@ class AsyncKafkaManager:
         return future.result(timeout=20)
 
     async def _send_async(self, topic: str, message: dict):
+        """
+        Asynchronous helper for send_message:
+        - Creates a temporary Kafka producer instance.
+        - Starts the producer and serializes the message to JSON.
+        - Sends the message to the given Kafka topic and waits for acknowledgment.
+        - Ensures the producer is stopped after the operation, even if an error occurs.
+        """
+
         producer = AIOKafkaProducer(
             bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
             value_serializer=lambda x: json.dumps(x).encode("utf-8"),
@@ -35,6 +51,13 @@ class AsyncKafkaManager:
             await producer.stop()
 
     async def create_consumer(self, topics: str | List[str]):
+        """
+        Asynchronous method for creating consumer
+        - creates consumer for provided topics 
+        - starts consumer so it receives messages 
+        """
+        
+        
         if isinstance(topics, str):
             topics = [topics]
 
