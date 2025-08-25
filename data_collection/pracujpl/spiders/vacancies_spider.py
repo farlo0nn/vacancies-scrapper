@@ -14,7 +14,7 @@ from pracujpl.interfaces import (
 from pracujpl.services.cache.redis_cache import RedisCache
 from pracujpl.services.url_building.pracujpl_url_builder import PracujplURLBuilder
 from pracujpl.services.extraction.pracujpl_vacancy_extractor import PracujplVacancyExtractor
-from pracujpl.services.messaging.kafka_messaging_service import KafkaMessagingService
+from pracujpl.services.messaging.kafka_messaging_service import KafkaMessageService
 from pracujpl.services.selecting.pracujpl_vacancy_section_selector import PracujplVacancySectionSelector
 
 class VacanciesSpider(scrapy.Spider):

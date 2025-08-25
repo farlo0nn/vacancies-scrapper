@@ -27,13 +27,13 @@ class NotificationsService:
                 await asyncio.sleep(0.05)
             except Exception as e:
                 logger.error(f"Error occurred while sending vacancy message to user \nTraceback: {traceback.format_exc()}")
-                raise e
+                raise
 
     def _format_vacancy_message(self, data: dict) -> str:
         try:
             return self.template.render(**data)
         except KeyError as e:
-            logger.error(f"Missing key in vacancy data: {e}\n{traceback.format_exc()}")
+            logger.error(f"Missing key in vacancy data: \n{traceback.format_exc()}")
             raise
         except Exception as e:
             logger.error(f"Failed to render vacancy message:\n{traceback.format_exc()}")

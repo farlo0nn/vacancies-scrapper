@@ -5,7 +5,7 @@ from typing import Callable
 
 from pracujpl.factories.vacancy_spider_factory import VacancySpiderFactory
 from pracujpl.services.cache.redis_cache import RedisCache
-from pracujpl.services.messaging.kafka_messaging_service import KafkaMessagingService
+from pracujpl.services.messaging.kafka_messaging_service import KafkaMessageService
 from config import REDIS_HOST, REDIS_PORT, KAFKA_BOOTSTRAP_SERVERS
 
 def run_spider(spider_class: Callable, **kwargs):
@@ -15,11 +15,10 @@ def run_spider(spider_class: Callable, **kwargs):
     process.start()
 
 if __name__ == "__main__":
-    
     run_spider(
         VacancySpiderFactory.create_spider_cls(
             cache_service=RedisCache(host=REDIS_HOST, port=REDIS_PORT),
-            messaging_service=KafkaMessagingService(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+            messaging_service=KafkaMessageService(KAFKA_BOOTSTRAP_SERVERS)
         )
     )
 
